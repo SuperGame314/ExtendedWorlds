@@ -1,0 +1,13 @@
+name: ExtendedWorlds
+version: ${project.version}
+main: com.gmail.supergame314.extendedworlds.ExtendedWorlds
+api-version: 1.13
+authors: [Super__Game]
+commands:
+  exw:
+    description: create new world
+    usage: /<command>
+    permission: ExtendedWorlds.edit
+permissions:
+  ExtendedWorlds.edit:
+    default: op
