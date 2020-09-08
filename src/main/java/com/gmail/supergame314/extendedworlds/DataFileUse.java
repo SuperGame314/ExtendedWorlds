@@ -8,6 +8,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+
+/**
+ *  Class about originally file style .DATAFILE
+ *
+ *
+ *  @author Super__Game
+ *
+ */
+
+
 public class DataFileUse {
     
     private File df;
@@ -39,7 +49,7 @@ public class DataFileUse {
             FileWriter fw = new FileWriter(df);
             BufferedWriter bw = new BufferedWriter(fw);
             for(String s:readData){
-                bw.write(s);
+                bw.write(s+"\n");
             }
             bw.close();
             fw.close();
@@ -50,23 +60,30 @@ public class DataFileUse {
 
 
 
-    public void addData(String key,String... values){
+
+    public void addData(String key,String value){
         updateData();
+        List<String> list = new ArrayList<>();
         if (getLine("<"+key+">")==-1 && getLine("</"+key+">")==-1){
-            List<String> list =Arrays.asList(values);
-            list.add(0,"<"+key+">");
-            list.add(list.size(),"</"+key+">");
-            readData.addAll(list);
+            readData.add(0,"<"+key+">");
+            readData.add(1,value);
+            readData.add(2,"</"+key+">");
+        }else {
+            readData.add(getLine("<" + key + ">") + 1, value);
         }
-        readData.addAll(getLine("<"+key+">")+1, Arrays.asList(values));
         save();
     }
 
 
     public void removeData(String key,String... values){
         updateData();
-        for(int i = getLine("<"+key+">")+1;i<getLine("</"+key+">");)
-            if(Arrays.asList(values).contains(readData.get(i)))readData.remove(i);
+        for(int i = getLine("<"+key+">")+1;i<getLine("</"+key+">");) {
+            if (Arrays.asList(values).contains(readData.get(i))){
+                readData.remove(i);
+                continue;
+            }
+            i++;
+        }
         save();
     }
 
@@ -90,12 +107,15 @@ public class DataFileUse {
 
 
     private int getLine(String regex) {
-        for(int i =0;i<readData.size();i++){
+        /*for(int i =0;i<readData.size();i++){
             if(readData.get(i).matches(regex)){
                 return i;
             }
         }
-        return -1;
+
+         */
+
+        return readData.indexOf(regex);
     }
 
     private void updateData(){
