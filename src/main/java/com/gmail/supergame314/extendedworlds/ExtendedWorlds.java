@@ -7,9 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -67,7 +65,6 @@ public final class ExtendedWorlds extends JavaPlugin {
                 sender.sendMessage(prefix + "  §e§lSEED:§e§l" + wc.seed());
                 sender.sendMessage(prefix + "  §7requested by :§0" + wc.seed());
 
-                Bukkit.getConsoleSender().sendMessage(prefix + "§7§lRunning creating world task on "+getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
                     World w = Bukkit.getServer().createWorld(wc);
                     if (w != null) {
                         dfu.addData("addedWorlds",w.getName());
@@ -75,7 +72,7 @@ public final class ExtendedWorlds extends JavaPlugin {
                     } else {
                         sender.sendMessage(prefix + " §c§l正常に読み込めなかったようです");
                     }
-                }));
+
                 break;
             case "rm":
             case "remove":
@@ -83,10 +80,11 @@ public final class ExtendedWorlds extends JavaPlugin {
             case "delete":
                 if (args.length < 2) {
                     sender.sendMessage(prefix+" §2§l/exw delete <ワールド名>");
-                    sender.sendMessage(prefix+"   §4§l他のもですがこれを実行すると戻せません！！");
+                    sender.sendMessage(prefix+"   §7対象のワールドを削除します");
+                    sender.sendMessage(prefix+"   §7元に戻せるわけがありません");
                     return true;
                 }
-                World w = Bukkit.getWorld(args[1]);
+                w = Bukkit.getWorld(args[1]);
                 if (w == null) {
                     sender.sendMessage(prefix + "§c§lワールド§e§l" + args[1] + "§c§lが見つかりませんでした");
                     return true;
@@ -132,9 +130,8 @@ public final class ExtendedWorlds extends JavaPlugin {
                     return true;
                 }
                 if(!isExistIn(getDataFolder(),args[1])){
-                    sender.sendMessage(prefix+"   §c§lファイルが見つかりませんでした");
-                    sender.sendMessage(prefix+"   §c§lファイルをプラグインフォルダにいれてから");
-                    sender.sendMessage(prefix+"   §c§l行ってください");
+                    sender.sendMessage(prefix+" §c§lファイルが見つかりませんでした");
+                    sender.sendMessage(prefix+" §c§lファイルをプラグインフォルダにいれてから行ってください");
                     return true;
                 }
                 if(sender instanceof Player && ((Player) sender).getLocation().getWorld()==w){
@@ -152,18 +149,21 @@ public final class ExtendedWorlds extends JavaPlugin {
                     for (File file : f) {
                         if (file.getName().equals(s)) {
                             sender.sendMessage(prefix + " §7"+file.getName()+" was found");
-                            sender.sendMessage(prefix + " §a§lファイルを削除します...");
+                            sender.sendMessage(prefix + " §7ファイルを削除します...");
                             b = deleteFolder(file);
                             break;
                         }
                     }
                 if(b) {
-                    sender.sendMessage(prefix + " §7ワールド§e§l"+args[1]+"§a§lが正常に削除されました");
+                    sender.sendMessage(prefix + " §7ワールド"+args[1]+"が正常に削除されました");
                 }else {
                     sender.sendMessage(prefix + " §c§lファイルが見つからなかったか、削除できませんでした");
                     sender.sendMessage(prefix + " §c§l削除が正常に終了できませんでした");
+                    return true;
                 }
-                importWorld(getServer().getConsoleSender(), s, true);
+                if(importWorld(sender, s, true)){
+                    sender.sendMessage(prefix + " §a§lリロードが完了しました");
+                }
                 break;
             case "w":
             case "warp":
@@ -179,6 +179,7 @@ public final class ExtendedWorlds extends JavaPlugin {
                         sender.sendMessage(prefix + "§c§lワールド§e§l"+args[1]+"§c§lが見つかりませんでした");
                         return true;
                     }
+                    sender.sendMessage(prefix + " §7teleporting...");
                     int x=0;
                     if(args.length>=3)
                         x=Integer.parseInt(args[2]);
@@ -198,9 +199,8 @@ public final class ExtendedWorlds extends JavaPlugin {
                 }
                 w = Bukkit.getWorld(args[1]);
                 if(!isExistIn(getDataFolder(),args[1])){
-                    sender.sendMessage(prefix+"   §c§lファイルが見つかりませんでした");
-                    sender.sendMessage(prefix+"   §c§lファイルをプラグインフォルダにいれてから");
-                    sender.sendMessage(prefix+"   §c§l行ってください");
+                    sender.sendMessage(prefix+" §c§lファイルが見つかりませんでした");
+                    sender.sendMessage(prefix+" §c§lファイルをプラグインフォルダにいれてから行ってください");
                     return true;
                 }
                 if(w == null){
@@ -232,7 +232,8 @@ public final class ExtendedWorlds extends JavaPlugin {
                     return true;
                 }
                 if(!isExistIn(getDataFolder(),args[1])){
-                    sender.sendMessage(prefix+"   §c§lファイルが見つかりませんでした");
+                    sender.sendMessage(prefix+" §c§lファイルが見つかりませんでした");
+                    sender.sendMessage(prefix+" §c§lファイルをプラグインフォルダにいれてから行ってください");
                     return true;
                 }
                 if(importWorld(sender,args[1],true)) {
@@ -253,7 +254,7 @@ public final class ExtendedWorlds extends JavaPlugin {
     @Override
     public void onEnable() {
         System.out.println("§2==================================================");
-        System.out.println("§c┌ーー       §f           §6Enabling           ");
+        System.out.println("§c┌ーー       §f             §6Enabling           ");
         System.out.println("§c｜ー　xtended §f｜｜｜orld §6 ExtendedWorlds     ");
         System.out.println("§c└ーー  　　   §f└―-┘      §6      Version 1.0   ");
         System.out.println("§2==================================================");
@@ -287,7 +288,7 @@ public final class ExtendedWorlds extends JavaPlugin {
         worlds=dfu.getData("addedWorlds");
         if(worlds!=null) {
             for (String world : worlds) {
-                if(Bukkit.getWorld(world)==null){
+                if(Bukkit.getWorld(world)!=null){
                     continue;
                 }
                 getLogger().info("[addedWorldCreating] Preparing World \""+world+"\"");
@@ -356,7 +357,7 @@ public final class ExtendedWorlds extends JavaPlugin {
         sender.sendMessage(prefix+"   §7対象のワールドにワープします");
         sender.sendMessage(prefix+"   §7座標省略すると0,0に飛ばされます....");
         sender.sendMessage(prefix+" §2§l/exw reload <ワールド名>");
-        sender.sendMessage(prefix+"   §7§lワールドをプラグインフォルダから読み込みなおします");
+        sender.sendMessage(prefix+"   §7ワールドをプラグインフォルダから読み込みなおします");
         sender.sendMessage(prefix+" §2§l/exw reloadset <ワールド名> <true/false>");
         sender.sendMessage(prefix+"   §7鯖起動時に毎回プラグインフォルダから読み込みなおすか");
         sender.sendMessage(prefix+"   §7設定します");
@@ -444,7 +445,7 @@ public final class ExtendedWorlds extends JavaPlugin {
             return false;
         }
         sender.sendMessage(prefix+" §7ワールド生成中....");
-        if(newThread) {
+        if(false) {
             Bukkit.getConsoleSender().sendMessage(prefix + "§7§lRunning creating world task on " + getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
                 World neww = getServer().createWorld(new WorldCreator(worldName));
                 if (neww != null) {
