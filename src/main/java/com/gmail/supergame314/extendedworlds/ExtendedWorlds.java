@@ -362,6 +362,7 @@ public final class ExtendedWorlds extends JavaPlugin {
         sender.sendMessage(prefix+"   §7設定します");
         sender.sendMessage(prefix+"   §7falseにすると鯖起動時に毎回プラグインフォルダから");
         sender.sendMessage(prefix+"   §7読み込みなおします");
+        sender.sendMessage(prefix+" §8created by Super__Game");
     }
 
     private List<String> strings(String s,List<String> args){
