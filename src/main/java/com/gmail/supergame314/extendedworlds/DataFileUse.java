@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 
 /**
- *  Class about originally file style .DATAFILE
+ *  Class abou file style .DATAFILE
  *
  *
  *  ( ˘ω˘)ｽﾔｧ
