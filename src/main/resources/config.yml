@@ -1,2 +1,4 @@
-# Worlds
-worlds: 
+
+# 鯖起動時リロードを実行せず、普通に読み込むようにします
+# 使用後はfalseに戻してください
+dont_reload: false

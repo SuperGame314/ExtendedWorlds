@@ -29,14 +29,19 @@ public class DataFileUse {
         logger = javaPlugin.getLogger();
     }
 
-    public void saveDefaultData() {
+    public void saveDefaultData(String... defKey) {
         if(!df.exists()){
             try {
                 logger.info("data.datafile doesn't exist! creating file...");
                 if(!df.createNewFile())
                     logger.warning("couldn't create data file.");
-                else 
+                else {
                     logger.info("Done!!");
+                    for(String s:defKey){
+                        addData(s,"def");
+                        removeData(s,"def");
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -63,7 +68,6 @@ public class DataFileUse {
 
     public void addData(String key,String value){
         updateData();
-        List<String> list = new ArrayList<>();
         if (getLine("<"+key+">")==-1 && getLine("</"+key+">")==-1){
             readData.add(0,"<"+key+">");
             readData.add(1,value);
@@ -104,6 +108,59 @@ public class DataFileUse {
         else
             return null;
     }
+
+    public void putMap(String map,String key,String value){
+        updateData();
+        if (getLine("<"+map+">")==-1 && getLine("</"+map+">")==-1){
+            readData.add(0,"<"+map+">");
+            readData.add(1,key+">>"+value);
+            readData.add(2,"</"+map+">");
+        }else {
+            if(getMap(map, key)==null)
+                readData.add(getLine("<" + map + ">") + 1, key+">>"+value);
+            else{
+                for(int i = getLine("<"+map+">")+1;i<getLine("</"+map+">");i++){
+                    if(readData.get(i).matches(key+">>.*")){
+                        readData.set(i,key+">>"+value);
+                    }
+                }
+            }
+        }
+        save();
+    }
+
+    public String getMap(String map,String key){
+        updateData();
+        if (getLine("<"+map+">")==-1 && getLine("</"+map+">")==-1){
+            return null;
+        }else {
+            for(int i=getLine("<" + map + ">") + 1;i<getLine("</" + map + ">");i++) {
+                if(readData.get(i).matches(key+">>.*")){
+                    String s = readData.get(i);
+                    return s.substring(s.indexOf(">>")+2);
+                }
+            }
+
+        }
+        return null;
+    }
+
+
+    public void removeMap(String map,String key){
+        updateData();
+        if (getLine("<" + map + ">") != -1 && getLine("</" + map + ">") != -1) {
+            for(int i=getLine("<" + map + ">") + 1;i<getLine("</" + map + ">");) {
+                if(readData.get(i).matches(key+">>.*")){
+                    readData.remove(i);
+                    continue;
+                }
+                i++;
+            }
+
+        }
+        save();
+    }
+
 
 
     private int getLine(String regex) {

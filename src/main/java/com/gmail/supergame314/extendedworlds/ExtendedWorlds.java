@@ -3,8 +3,10 @@ package com.gmail.supergame314.extendedworlds;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -17,6 +19,7 @@ public final class ExtendedWorlds extends JavaPlugin {
     static String prefix = "§f[§c§lEx§7§lWorld§f]";
     static File folder = null;
     static DataFileUse dfu = null;
+    static FileConfiguration config;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -63,16 +66,19 @@ public final class ExtendedWorlds extends JavaPlugin {
                 sender.sendMessage(prefix + "  §e§lTYPE:§e§l" + wc.type().getName());
                 sender.sendMessage(prefix + "  §e§lENVIRONMENT:§e§l" + wc.environment().name());
                 sender.sendMessage(prefix + "  §e§lSEED:§e§l" + wc.seed());
-                sender.sendMessage(prefix + "  §7requested by :§0" + wc.seed());
-
-                    World w = Bukkit.getServer().createWorld(wc);
-                    if (w != null) {
-                        dfu.addData("addedWorlds",w.getName());
-                        sender.sendMessage(prefix + " §a§lDone!!");
-                    } else {
-                        sender.sendMessage(prefix + " §c§l正常に読み込めなかったようです");
+                sender.sendMessage(prefix + "  §7requested by :§0" + sender.getName());
+                new BukkitRunnable(){
+                    @Override
+                    public void run() {
+                        World w = Bukkit.getServer().createWorld(wc);
+                        if (w != null) {
+                            dfu.addData("addedWorlds", w.getName());
+                            sender.sendMessage(prefix + " §a§lDone!!");
+                        } else {
+                            sender.sendMessage(prefix + " §c§l正常に読み込めなかったようです");
+                        }
                     }
-
+                }.runTask(this);
                 break;
             case "rm":
             case "remove":
@@ -84,7 +90,7 @@ public final class ExtendedWorlds extends JavaPlugin {
                     sender.sendMessage(prefix+"   §7元に戻せるわけがありません");
                     return true;
                 }
-                w = Bukkit.getWorld(args[1]);
+                World w = Bukkit.getWorld(args[1]);
                 if (w == null) {
                     sender.sendMessage(prefix + "§c§lワールド§e§l" + args[1] + "§c§lが見つかりませんでした");
                     return true;
@@ -259,30 +265,40 @@ public final class ExtendedWorlds extends JavaPlugin {
         System.out.println("§c└ーー  　　   §f└―-┘      §6      Version 1.0   ");
         System.out.println("§2==================================================");
         saveDefaultConfig();
+        config = getConfig();
+
         folder = getDataFolder();
         dfu = new DataFileUse(new File(folder+"\\data.datafile"),this);
-        dfu.saveDefaultData();
+        dfu.saveDefaultData("addedWorlds","reloadWorlds");
         String[] worlds=dfu.getData("reloadWorlds");
-        if(worlds!=null && Bukkit.getWorld(worlds[0])==null) {
-            getLogger().info("[reloading] Starting creating a world");
+        if(worlds!=null && worlds.length!=0 &&  Bukkit.getWorld(worlds[0])==null) {
+            getLogger().info(config.getBoolean("dont_reload")?"\"Dont_reload\" in the config is true! The server will start without reloading worlds":"[reloading] Starting creating a world");
             for (String world : worlds) {
-                getLogger().info("[reloading] Preparing World \"" + world+"\"");
-                File[] f = Bukkit.getWorldContainer().listFiles();
-                boolean b = false;
-                if (f != null)
-                    for (File file : f) {
-                        if (file.getName().equals(world)) {
-                            b = deleteFolder(file);
-                            break;
-                        }
+                if(config.getBoolean("dont_reload")) {
+                    if(Bukkit.getWorld(world)!=null){
+                        continue;
                     }
-                if(b) {
-                    getLogger().info("[reloading] §a§lワールド§e§l"+world+"§a§lが正常に削除されました");
-                }else {
-                    getLogger().info(prefix + "[reloading] §c§lファイルが見つからなかったか、削除できませんでした");
-                    getLogger().warning(prefix + "[reloading] §c§l削除が正常に終了できませんでした");
+                    getLogger().info("[addedWorldCreating] Preparing World \""+world+"\"");
+                    Bukkit.createWorld(new WorldCreator(world));
+                }else{
+                    getLogger().info("[reloading] Preparing World \"" + world + "\"");
+                    File[] f = Bukkit.getWorldContainer().listFiles();
+                    boolean b = false;
+                    if (f != null)
+                        for (File file : f) {
+                            if (file.getName().equals(world)) {
+                                b = deleteFolder(file);
+                                break;
+                            }
+                        }
+                    if (b) {
+                        getLogger().info("[reloading] §a§lワールド§e§l" + world + "§a§lが正常に削除されました");
+                    } else {
+                        getLogger().info(prefix + "[reloading] §c§lファイルが見つからなかったか、削除できませんでした");
+                        getLogger().warning(prefix + "[reloading] §c§l削除が正常に終了できませんでした");
+                    }
+                    importWorld(getServer().getConsoleSender(), world, false);
                 }
-                importWorld(getServer().getConsoleSender(), world, false);
             }
         }
         worlds=dfu.getData("addedWorlds");
@@ -445,17 +461,6 @@ public final class ExtendedWorlds extends JavaPlugin {
             return false;
         }
         sender.sendMessage(prefix+" §7ワールド生成中....");
-        if(false) {
-            Bukkit.getConsoleSender().sendMessage(prefix + "§7§lRunning creating world task on " + getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
-                World neww = getServer().createWorld(new WorldCreator(worldName));
-                if (neww != null) {
-                    sender.sendMessage(prefix + " §a§lDone!!");
-                    sender.sendMessage(prefix + " §a§lワールド、" + worldName + "が生成されました");
-                } else {
-                    sender.sendMessage(prefix + " §c§l正常に読み込めなかったようです");
-                }
-            }));
-        }else{
             World neww = getServer().createWorld(new WorldCreator(worldName));
             if (neww != null) {
                 sender.sendMessage(prefix + " §a§lDone!!");
@@ -464,7 +469,7 @@ public final class ExtendedWorlds extends JavaPlugin {
                 sender.sendMessage(prefix + " §c§l正常に読み込めなかったようです");
                 return false;
             }
-        }
+
         return true;
     }
 
