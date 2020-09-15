@@ -14,6 +14,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ *  ExtendedWorlds for Paper 1.1.8
+ *
+ *  @author Super__Game
+ */
+
 public final class ExtendedWorlds extends JavaPlugin {
 
     static String prefix = "§f[§c§lEx§7§lWorld§f]";

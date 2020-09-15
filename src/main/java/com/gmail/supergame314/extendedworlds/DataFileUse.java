@@ -13,6 +13,12 @@ import java.util.logging.Logger;
  *  Class about originally file style .DATAFILE
  *
  *
+ *  ( ˘ω˘)ｽﾔｧ
+ *  config.ymlを使えば良かったななんで今更ながら思ってます
+ *  その方が使ってる側編集しやすいじゃないですかやだー
+ *  もしこのファイルを開くならワードパットがおすすめです
+ *  htmlみたいな構文になってます()
+ *
  *  @author Super__Game
  *
  */
