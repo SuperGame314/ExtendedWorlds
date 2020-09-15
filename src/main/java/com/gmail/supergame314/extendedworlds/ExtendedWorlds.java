@@ -257,6 +257,8 @@ public final class ExtendedWorlds extends JavaPlugin {
                 for(World world:getServer().getWorlds()) {
                     sender.sendMessage(prefix+" §e§l"+world.getName());
                     sender.sendMessage(prefix+" §7 鯖起動時読み込み:"+Arrays.asList(dfu.getData("reloadWorlds")).contains(world.getName()));
+                    if(sender instanceof Player && ((Player) sender).getWorld()==world)
+                        sender.sendMessage(prefix+"  §4§lあなたはここにいます！");
                 }
                 break;
         }
