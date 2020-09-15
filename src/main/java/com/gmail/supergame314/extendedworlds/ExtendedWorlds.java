@@ -29,8 +29,11 @@ public final class ExtendedWorlds extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(args.length==0){
-            showHelp(sender);
+        if(args.length==0 || args[0].equals("help") || args[0].equals("?")){
+            if(args.length<=1)
+                showHelp(sender,1);
+            else
+                showHelp(sender,Integer.parseInt(args[1]));
             return true;
         }
 
@@ -86,6 +89,50 @@ public final class ExtendedWorlds extends JavaPlugin {
                     }
                 }.runTask(this);
                 break;
+            case "unload":
+                if (args.length < 2) {
+                    sender.sendMessage(prefix+" §2§l/exw unload <ワールド名>");
+                    sender.sendMessage(prefix+"   §7対象のワールドをアンロードします");
+                    sender.sendMessage(prefix+"   §7ファイルは残ります");
+                    return true;
+                }
+                World w = Bukkit.getWorld(args[1]);
+                if (w == null) {
+                    sender.sendMessage(prefix + "§c§lワールド§e§l" + args[1] + "§c§lが見つかりませんでした");
+                    return true;
+                }
+                if(sender instanceof Player && ((Player) sender).getLocation().getWorld()==w){
+                    sender.sendMessage(prefix+" §c§lあなたはそのワールドにいます！他のワールドに移動してください！");
+                    return true;
+                }
+                for (Player p : w.getPlayers()) {
+                    p.kickPlayer("[ExW] The world will be unloaded. Please rejoin the server.");
+                }
+                getServer().unloadWorld(w, true);
+                break;
+            case "copy":
+                if (args.length < 2) {
+                    sender.sendMessage(prefix+" §2§l/exw copy <ワールド名>");
+                    sender.sendMessage(prefix+"   §7対象のワールドをプラグインフォルダにコピーします");
+                    sender.sendMessage(prefix+"   §7処理上、ワールドを一度アンロードします");
+                    return true;
+                }
+                w = Bukkit.getWorld(args[1]);
+                if (w == null) {
+                    sender.sendMessage(prefix + "§c§lワールド§e§l" + args[1] + "§c§lが見つかりませんでした");
+                    return true;
+                }
+                if(sender instanceof Player && ((Player) sender).getLocation().getWorld()==w){
+                    sender.sendMessage(prefix+" §c§lあなたはそのワールドにいます！他のワールドに移動してください！");
+                    return true;
+                }
+                for (Player p : w.getPlayers()) {
+                    p.kickPlayer("[ExW] The world will be unloaded. Please rejoin the server.");
+                }
+                getServer().unloadWorld(w, true);
+                copyFile(w.getWorldFolder(),new File(getDataFolder()+"\\"+w.getName()));
+                getServer().createWorld(new WorldCreator(args[1]));
+                break;
             case "rm":
             case "remove":
             case "del":
@@ -93,10 +140,11 @@ public final class ExtendedWorlds extends JavaPlugin {
                 if (args.length < 2) {
                     sender.sendMessage(prefix+" §2§l/exw delete <ワールド名>");
                     sender.sendMessage(prefix+"   §7対象のワールドを削除します");
+                    sender.sendMessage(prefix+"   §7ファイルごと粉砕します");
                     sender.sendMessage(prefix+"   §7元に戻せるわけがありません");
                     return true;
                 }
-                World w = Bukkit.getWorld(args[1]);
+                w = Bukkit.getWorld(args[1]);
                 if (w == null) {
                     sender.sendMessage(prefix + "§c§lワールド§e§l" + args[1] + "§c§lが見つかりませんでした");
                     return true;
@@ -370,24 +418,35 @@ public final class ExtendedWorlds extends JavaPlugin {
         return null;
     }
 
-    private void showHelp(CommandSender sender){
-        sender.sendMessage(prefix+" §2§l/exw create <ワールド名> <タイプ> [シード値] [環境]");
-        sender.sendMessage(prefix+"   §7新たなワールドを作成します");
-        sender.sendMessage(prefix+"   §7シード値は省略またはrndでランダムにできます");
-        sender.sendMessage(prefix+" §2§l/exw delete <ワールド名>");
-        sender.sendMessage(prefix+"   §7対象のワールドを削除します");
-        sender.sendMessage(prefix+"   §7元に戻せるわけがありません");
-        sender.sendMessage(prefix+" §2§l/exw warp <ワールド名> [x] [z]");
-        sender.sendMessage(prefix+"   §7対象のワールドにワープします");
-        sender.sendMessage(prefix+"   §7座標省略すると0,0に飛ばされます....");
-        sender.sendMessage(prefix+" §2§l/exw reload <ワールド名>");
-        sender.sendMessage(prefix+"   §7ワールドをプラグインフォルダから読み込みなおします");
-        sender.sendMessage(prefix+" §2§l/exw reloadset <ワールド名> <true/false>");
-        sender.sendMessage(prefix+"   §7鯖起動時に毎回プラグインフォルダから読み込みなおすか");
-        sender.sendMessage(prefix+"   §7設定します");
-        sender.sendMessage(prefix+"   §7falseにすると鯖起動時に毎回プラグインフォルダから");
-        sender.sendMessage(prefix+"   §7読み込みなおします");
-        sender.sendMessage(prefix+" §8created by Super__Game");
+    private void showHelp(CommandSender sender,int page) {
+        if (page == 1) {
+            sender.sendMessage(prefix + " §2§l/exw create <ワールド名> <タイプ> [シード値] [環境]");
+            sender.sendMessage(prefix + "   §7新たなワールドを作成します");
+            sender.sendMessage(prefix + "   §7シード値は省略またはrndでランダムにできます");
+            sender.sendMessage(prefix + " §2§l/exw delete <ワールド名>");
+            sender.sendMessage(prefix + "   §7対象のワールドを削除します");
+            sender.sendMessage(prefix + "   §7元に戻せるわけがありません");
+            sender.sendMessage(prefix + " §2§l/exw warp <ワールド名> [x] [z]");
+            sender.sendMessage(prefix + "   §7対象のワールドにワープします");
+            sender.sendMessage(prefix + "   §7座標省略すると0,0に飛ばされます....");
+            sender.sendMessage(prefix + " §2§l/exw help <ページ>");
+            sender.sendMessage(prefix + "   §7プラグインのヘルプを表示します");
+            sender.sendMessage(prefix + " §2§l/exw reload <ワールド名>");
+            sender.sendMessage(prefix + "   §7ワールドをプラグインフォルダから読み込みなおします");
+            sender.sendMessage(prefix + " §2§l/exw reloadset <ワールド名> <true/false>");
+            sender.sendMessage(prefix + "   §7鯖起動時に毎回プラグインフォルダから読み込みなおすか");
+            sender.sendMessage(prefix + "   §7設定します");
+            sender.sendMessage(prefix + "   §7falseにすると鯖起動時に毎回プラグインフォルダから");
+            sender.sendMessage(prefix + "   §7読み込みなおします");
+        }else if(page==2) {
+            sender.sendMessage(prefix + " §2§l/exw copy <ワールド名>");
+            sender.sendMessage(prefix + "   §7対象のワールドをプラグインフォルダにコピーします");
+            sender.sendMessage(prefix + "   §7処理上、ワールドを一度アンロードします");
+            sender.sendMessage(prefix + " §2§l/exw unload <ワールド名>");
+            sender.sendMessage(prefix + "   §7対象のワールドをアンロードします");
+            sender.sendMessage(prefix + "   §7ファイルは残ります");
+            sender.sendMessage(prefix + " §8created by Super__Game");
+        }
     }
 
     private List<String> strings(String s,List<String> args){
@@ -422,6 +481,7 @@ public final class ExtendedWorlds extends JavaPlugin {
 
     private boolean copyFile(File world,File to) {
         try {
+            if(world.getName().equals("uid.dat"))
             System.out.println("copying File "+world.getName());
             Files.copy(world.toPath(),to.toPath());
         } catch (IOException e) {
