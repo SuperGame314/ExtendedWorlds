@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  *  ExtendedWorlds for Paper 1.1.8
@@ -21,6 +22,7 @@ import java.util.List;
  */
 
 public final class ExtendedWorlds extends JavaPlugin {
+
 
     static String prefix = "§f[§c§lEx§7§lWorld§f]";
     static File folder = null;
@@ -51,10 +53,15 @@ public final class ExtendedWorlds extends JavaPlugin {
                         return true;
                     }
                 }
+
                 WorldCreator wc = new WorldCreator(args[1]);
-                for (WorldType wt : WorldType.values()) {
-                    if (args[2].startsWith(wt.name())) {
-                        wc.type(wt);
+                if(args[2].equals("VOID")){
+                    wc.generator(new VoidChunkGenerator());
+                }else {
+                    for (WorldType wt : WorldType.values()) {
+                        if (args[2].startsWith(wt.name())) {
+                            wc.type(wt);
+                        }
                     }
                 }
                 if (args.length >= 4 && !args[3].equalsIgnoreCase("rnd")) {
@@ -72,10 +79,17 @@ public final class ExtendedWorlds extends JavaPlugin {
                 }
                 sender.sendMessage(prefix + " §a§lCreating WORLD....");
                 sender.sendMessage(prefix + "  §e§lNAME:§e§l" + wc.name());
-                sender.sendMessage(prefix + "  §e§lTYPE:§e§l" + wc.type().getName());
+                sender.sendMessage(prefix + "  §e§lTYPE:§e§l" + (args[2].equals("VOID")?"VOID":wc.type().getName()));
                 sender.sendMessage(prefix + "  §e§lENVIRONMENT:§e§l" + wc.environment().name());
                 sender.sendMessage(prefix + "  §e§lSEED:§e§l" + wc.seed());
                 sender.sendMessage(prefix + "  §7requested by :§0" + sender.getName());
+                CommandSender console = Bukkit.getConsoleSender();
+                console.sendMessage(prefix + " §a§lCreating WORLD....");
+                console.sendMessage(prefix + "  §e§lNAME:§e§l" + wc.name());
+                console.sendMessage(prefix + "  §e§lTYPE:§e§l" + (args[2].equals("VOID")?"VOID":wc.type().getName()));
+                console.sendMessage(prefix + "  §e§lENVIRONMENT:§e§l" + wc.environment().name());
+                console.sendMessage(prefix + "  §e§lSEED:§e§l" + wc.seed());
+                console.sendMessage(prefix + "  §7requested by :§0" + sender.getName());
                 new BukkitRunnable(){
                     @Override
                     public void run() {
@@ -382,10 +396,10 @@ public final class ExtendedWorlds extends JavaPlugin {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if(args.length==1) {
-            return strings(args[0],Arrays.asList("create","delete","warp","import","reload","reloadset","list"));
+            return strings(args[0],Arrays.asList("create","delete","warp","import","reload","reloadset","list","copy","help","unload"));
         }
         if(args.length==2){
-            if(args[0].equalsIgnoreCase("warp") || args[0].equalsIgnoreCase("reloadset") || args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("delete")) {
+            if(args[0].equalsIgnoreCase("warp") || args[0].equalsIgnoreCase("reloadset") || args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("copy")  || args[0].equalsIgnoreCase("unload")) {
                 List<String> list = new ArrayList<>();
                 for(World w:Bukkit.getWorlds())
                     list.add(w.getName());
@@ -397,6 +411,7 @@ public final class ExtendedWorlds extends JavaPlugin {
                 List<String> list = new ArrayList<>();
                 for(WorldType w:WorldType.values())
                     list.add(w.getName());
+                list.add("VOID");
                 return strings(args[2], list);
             }
             if(args[0].equalsIgnoreCase("reloadset")) {
