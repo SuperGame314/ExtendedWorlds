@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- *  ExtendedWorlds for Paper 1.1.8
+ *  ExtendedWorlds for Paper 1.8.8
  *
  *  @author Super__Game
  */
